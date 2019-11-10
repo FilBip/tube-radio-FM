@@ -1,3 +1,3 @@
 # tube-radio-FM
 
-Arduino project to convert an old tube radio to listen to the FM band and use the old variable capacitor to select the channel.
+Arduino project to add FM band to an old tube radio and select the channel using the old variable capacitor.
