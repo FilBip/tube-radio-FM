@@ -18,7 +18,7 @@ RDA5807M radio;    // Create an instance of a RDA5807 chip radio
 int prevChan=0;
 
 // Min and max varcap values (pF)
-#define MINCAP 43
+#define MINCAP 50
 #define MAXCAP 439
 
 // Convert pF boundaries to oscillator frequencies
@@ -90,10 +90,13 @@ void setup()
 
 void loop()
 {
+  unsigned long chan;
   unsigned long freq = count/deltaT;
   if (freq < lowBound)
-    freq=lowBound;
-  unsigned long chan = 1080-(freq-lowBound)*210/freqBound;
+    chan = 1080;
+  else
+    chan = 1080 - (freq - lowBound) * 210 / freqBound;
+  if (chan < 870) chan = 870;
 
 #if DEBUG
   unsigned capa = CONVERTFACTOR/freq;
@@ -108,8 +111,6 @@ void loop()
   Serial.println("");
 #endif
 
-  if (chan < 870) chan=870;
-  if (chan > 1080) chan=1080;
   chan*=10; // to radio library format
   if (chan != prevChan) {
      prevChan = chan;
@@ -124,6 +125,6 @@ void loop()
   delay (100); // pause!
 
 #if DEBUG
-  delay (1900);  // slow debug :)
+  delay (900);  // slow debug :)
 #endif
 }
