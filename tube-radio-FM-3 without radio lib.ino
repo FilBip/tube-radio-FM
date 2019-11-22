@@ -24,15 +24,16 @@ int prevChan=0;
 // Convert pF boundaries to oscillator frequencies
 // NE555 oscillator freq-capacitance conversion: F = 1.44 / ( (R1+2R2) * C ) with R1=R2=1Mohm
 #define CONVERTFACTOR 480000 // (1.44/3)*10e6
-unsigned long lowBound = CONVERTFACTOR/MAXCAP;
-unsigned long freqBound = CONVERTFACTOR/MINCAP - CONVERTFACTOR/MAXCAP;
+unsigned long oscLowBound = CONVERTFACTOR/MAXCAP;
+unsigned long oscFreqWidth = CONVERTFACTOR/MINCAP - CONVERTFACTOR/MAXCAP;
 
 
 // ----- Register Definitions -----
 
 // this chip only supports FM mode
-#define FREQ_STEPS 10
-#define FREQ_MAX 210
+#define FM_WIDTH 210
+#define FM_MIN  870
+#define FM_MAX 1080
 
 #define RADIO_REG_CHIPID  0x00
 
@@ -48,42 +49,9 @@ unsigned long freqBound = CONVERTFACTOR/MINCAP - CONVERTFACTOR/MAXCAP;
 #define RADIO_REG_CTRL_RESET  0x0002
 #define RADIO_REG_CTRL_ENABLE 0x0001
 
-#define RADIO_REG_CHAN    0x03
-#define RADIO_REG_CHAN_SPACE     0x0003
-#define RADIO_REG_CHAN_SPACE_100 0x0000
-#define RADIO_REG_CHAN_BAND      0x000C
-#define RADIO_REG_CHAN_BAND_FM      0x0000
-#define RADIO_REG_CHAN_BAND_FMWORLD 0x0008
-#define RADIO_REG_CHAN_TUNE   0x0010
-//      RADIO_REG_CHAN_TEST   0x0020
-#define RADIO_REG_CHAN_NR     0x7FC0
-
-#define RADIO_REG_R4    0x04
-#define RADIO_REG_R4_EM50   0x0800
-//      RADIO_REG_R4_RES   0x0400
-#define RADIO_REG_R4_SOFTMUTE   0x0200
-#define RADIO_REG_R4_AFC   0x0100
-
 
 #define RADIO_REG_VOL     0x05
 #define RADIO_REG_VOL_VOL   0x000F
-
-
-#define RADIO_REG_RA      0x0A
-#define RADIO_REG_RA_RDS       0x8000
-#define RADIO_REG_RA_RDSBLOCK  0x0800
-#define RADIO_REG_RA_STEREO    0x0400
-#define RADIO_REG_RA_NR        0x03FF
-
-#define RADIO_REG_RB          0x0B
-#define RADIO_REG_RB_FMTRUE   0x0100
-#define RADIO_REG_RB_FMREADY  0x0080
-
-
-#define RADIO_REG_RDSA   0x0C
-#define RADIO_REG_RDSB   0x0D
-#define RADIO_REG_RDSC   0x0E
-#define RADIO_REG_RDSD   0x0F
 
 #define RDA5807M_REG_RSSI 0x0B
 #define RDA5807M_RSSI_MASK 0xFE00
@@ -162,11 +130,11 @@ void loop()
 {
   unsigned long chan;
   unsigned long freq = count/deltaT;
-  if (freq < lowBound)
-    chan = 1080;
+  if (freq < oscLowBound)
+    chan = FM_MAX;
   else
-    chan = 1080 - (freq - lowBound) * FREQ_MAX / freqBound;
-  if (chan < 870) chan = 870;
+    chan = FM_MAX - (freq - oscLowBound) * FM_WIDTH / oscFreqWidth;
+  if (chan < FM_MIN) chan = FM_MIN;
 
 #if DEBUG
   unsigned capa = CONVERTFACTOR/freq;
@@ -202,7 +170,7 @@ void TuneTo( int ch)
 {
        byte numH,numL;
 
-       ch -= 870;
+       ch -= FM_MIN;
        numH=  ch>>2;
        numL = ((ch&3)<<6 | 0x10); 
        Wire.beginTransmission(I2C_RDA_INDX);
@@ -214,9 +182,9 @@ void TuneTo( int ch)
 
 //RDA5807_addr=0x11;       
 // I2C-Address RDA Chip for random access
-void WriteReg(byte reg,unsigned int valor)
+void WriteReg(byte reg,unsigned int val)
 {
   Wire.beginTransmission(I2C_RDA_INDX);
-  Wire.write(reg); Wire.write(valor >> 8); Wire.write(valor & 0xFF);
+  Wire.write(reg); Wire.write(val >> 8); Wire.write(val & 0xFF);
   Wire.endTransmission();
 }
