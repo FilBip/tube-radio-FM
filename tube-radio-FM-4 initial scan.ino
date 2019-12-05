@@ -242,7 +242,7 @@ void TuneTo( int ch)
 {
        ch -= FM_MIN;
        uint8_t hiByte = ch>>2;
-       uint8_t loByte = ((ch&3)<<6 | 0x10); // write frequency into bits 15:6, set tune bit
+       uint8_t loByte = ((ch&3)<<6 | RADIO_REG_CHAN_TUNE); // write frequency into bits 15:6, set tune bit
        Wire.beginTransmission(I2C_RDA_INDX);
        Wire.write(RADIO_REG_CHAN); // reg 0x03
        Wire.write(hiByte);         
