@@ -13,17 +13,17 @@
  Philippe Leclercq 2019
  */
  
-#define DEBUG 1
+#define DEBUG 0
 
 #include <Wire.h>
 
 int prevChan=0;
 
 // Min and max varcap values (pF)
-//#define MINCAP 50
-//#define MAXCAP 350
-#define MINCAP 32
-#define MAXCAP 512
+#define MINCAP 50
+#define MAXCAP 416
+//#define MINCAP 32
+//#define MAXCAP 512
 
 // Convert pF boundaries to oscillator frequencies
 // NE555 oscillator freq-capacitance conversion: F = 1.44 / ( (R1+2R2) * C ) with R1=R2=1Mohm
@@ -57,6 +57,14 @@ int reg;
 #define RADIO_REG_CTRL_RESET  0x0002
 #define RADIO_REG_CTRL_ENABLE 0x0001
 
+#define RADIO_REG_CHAN    0x03
+#define RADIO_REG_CHAN_SPACE     0x0003
+#define RADIO_REG_CHAN_SPACE_100 0x0000
+#define RADIO_REG_CHAN_BAND      0x000C
+#define RADIO_REG_CHAN_BAND_FM      0x0000
+#define RADIO_REG_CHAN_BAND_FMWORLD 0x0008
+#define RADIO_REG_CHAN_TUNE   0x0010
+#define RADIO_REG_CHAN_NR     0x7FC0
 
 #define RADIO_REG_VOL     0x05
 #define RADIO_REG_VOL_VOL   0x000F
@@ -75,13 +83,8 @@ int reg;
 #define RADIO_REG_RB_FMREADY  0x0080
 #define RADIO_RSSI_SHIFT 10
 
-// I2C-Address RDA Chip for sequential  Access
-#define I2C_RDA_SEQ  0x10
-
-// I2C-Address RDA Chip for Index  Access
-#define I2C_RDA_INDX  0x11
-
-
+#define I2C_RDA_SEQ  0x10 // I2C-Address RDA Chip for sequential  Access
+#define I2C_RDA_INDX  0x11 // I2C-Address RDA Chip for Index  Access
 
 #define INPUTPIN 5 // oscillator signal to pulse counter (Timer1)
  
@@ -238,19 +241,17 @@ void loop()
 void TuneTo( int ch)
 {
        byte numH,numL;
-
        ch -= FM_MIN;
-       numH=  ch>>2;
-       numL = ((ch&3)<<6 | 0x10); 
+       numH = ch>>2;
+       numL = ((ch&3)<<6 | 0x10); // write frequency into bits 15:6, set tune bit
        Wire.beginTransmission(I2C_RDA_INDX);
-       Wire.write(0x03);
-       Wire.write(numH);                     // write frequency into bits 15:6, set tune bit         
+       Wire.write(RADIO_REG_CHAN); // reg 0x03
+       Wire.write(numH);         
        Wire.write(numL);
        Wire.endTransmission();
 }
 
-//RDA5807_addr=0x11;       
-// I2C-Address RDA Chip for random access
+// Writes 1 word register
 void WriteReg(byte reg,unsigned int val)
 {
   Wire.beginTransmission(I2C_RDA_INDX);
@@ -301,6 +302,5 @@ int getFrequency() {
   // get register A
   uint16_t regRA = ReadReg(RADIO_REG_RA);
   uint16_t ch = regRA & RADIO_REG_RA_NR;
-  int freq = FM_MIN + ch;
-  return (freq);
+  return (FM_MIN + ch);
 }  // getFrequency
