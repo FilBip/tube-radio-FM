@@ -240,14 +240,13 @@ void loop()
 
 void TuneTo( int ch)
 {
-       byte numH,numL;
        ch -= FM_MIN;
-       numH = ch>>2;
-       numL = ((ch&3)<<6 | 0x10); // write frequency into bits 15:6, set tune bit
+       uint8_t hiByte = ch>>2;
+       uint8_t loByte = ((ch&3)<<6 | 0x10); // write frequency into bits 15:6, set tune bit
        Wire.beginTransmission(I2C_RDA_INDX);
        Wire.write(RADIO_REG_CHAN); // reg 0x03
-       Wire.write(numH);         
-       Wire.write(numL);
+       Wire.write(hiByte);         
+       Wire.write(loByte);
        Wire.endTransmission();
 }
 
