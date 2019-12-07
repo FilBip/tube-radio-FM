@@ -1,3 +1,10 @@
 # tube-radio-FM
 
-Arduino project to add FM band to an old tube radio and select the channel using the old variable capacitor.
+Arduino project to add the FM band to an old tube radio and continue to use the old varcap to select the channels.
+
+
+![schematic]("/tube-radio-FM.jpg")
+
+![the board]("/FM module board.jpg")
+
+
