@@ -7,4 +7,6 @@ Arduino project to add the FM band to an old tube radio and continue to use the 
 
 ![the board](/FMmoduleBoard.jpg)
 
+![board connected](/FMmoduleConnected.jpg)
+
 
